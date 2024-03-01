@@ -1,0 +1,10 @@
+name: gliderkmz
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python
+  - requests
+  - pandas
+  - numpy
+  - Jinja2
