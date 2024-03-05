@@ -1,9 +1,11 @@
 {% import 'track_macro.kml' as track_macro -%}
+{% import 'surface_event_macro.kml' as surface_event_macro -%}
+{% import 'text_box_macro.kml' as text_box_macro -%}
 <?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
-<Folder id="{{ glider_name }}">
+<Folder id="{{ glider_name }}-test">
 	<name>{{ glider_name }}</name>
-	<Snippet maxLines="2">Updated: 02/23/24 20:05 GMT</Snippet>
+	<Snippet maxLines="2">Updated: {{ ts_now }} GMT</Snippet>
 	<styleUrl>#{{ glider_name }}</styleUrl>
 	<Placemark id="currentPosition">
 		<name>Last Surfacing</name>
@@ -12,94 +14,7 @@
 			<begin>2024-02-15T19:25:27Z</begin>
 		</TimeSpan>
 		<styleUrl>#{{ glider_name }}Position</styleUrl>
-		<Style>
-			<BalloonStyle>
-				<text><![CDATA[<div align="center">
-<img src="http://marine.rutgers.edu/~kerfoot/icons/glider_tails/{{ glider_name }}.png" height="80" width="64"></img>
-<table width="350" bgcolor="white">
-<tr>
-<th width="200" align="right">Connected:</th><td width="200">{{ ls_connect_ts }} GMT</td>
-</tr>
-<tr>
-<th width="200" align="right">Disconnected:</th><td width="200">{{ ls_disconnect_ts }} GMT</td>
-</tr>
-<tr>
-<th width="200" align="right"><a href="http://en.wikipedia.org/wiki/NMEA_0183">NMEA</a> GPS Position:</th><td width="200">{{ ls_nmea_lat }}<b>N</b> / {{ ls_nmea_lon }}<b>W</b></td>
-</tr>
-<tr>
-<th width="200" align="right">GPS Acquired:</th><td bgcolor="green" width=200><font color="white">{{ ls_gps_connect_ts }} GMT</font></td>
-</tr>
-<tr>
-<th width="200" align="right">Reason:</th><td width="200">{{ ls_reason }}</td></tr>
-<tr>
-<th width="200" align="right">Mission:</th><td width="200">{{ ls_mission }}</td></tr>
-<tr>
-<th width="200" align="right">Filename:</th><td width="200">{{ ls_filename }}</td></tr>
-<tr>
-<th width="200" align="right">8.3 Filename:</th><td width="200">{{ ls_8x3_filename }}</td></tr>
-<tr>
-<th width="200" align="right">DSVR Log:</th><td width="200">{{ ls_dsvr_log }}</td></tr>
-<tr>
-<th width="200" align="right">Segment E/W/O:</th>
-<td width="200">0/0/3</td>
-</tr>
-<tr>
-<th width="200" align="right">Mission E/W/O:</th>
-<td width="200">0/2/101</td>
-</tr>
-<tr>
-<th width="200" align="right">Total E/W/O:</th>
-<td width="200">0/7/267</td>
-</tr>
-<tr>
-<th width="200" align="right">Battery:</th>
-<td width="200" bgcolor="#008800"><font color="white">16.01 Volts</font></td>
-</tr>
-<tr>
-<th width="200" align="right">Internal Vacuum:</th>
-<td width="200" bgcolor="green"><font color="white">9.31 inHg</font></td>
-</tr>
-</table>
-<hr />
-<table width="350" bgcolor="white">
-<tr>
-<th width="200" align="right">Dive Time: </th>
-<td width="200">166.42 minutes</td>
-</tr>
-<tr>
-<th width="200" align="right">Dive Distance: </th>
-<td width="200">1.83 km</td>
-</tr>
-<tr>
-<th width="200" align="right">Total Speed: </th>
-<td width="200">0.18 m/s @ 134°</td>
-</tr>
-<tr>
-<th width="200" align="right">Current Speed: </th>
-<td width="200">0.12 m/s @ 265°</td>
-</tr>
-<tr>
-<th width="200" align="right">Glide Speed: </th>
-<td width="200">0.28 m/s @ 114°</td>
-</tr>
-</table>
-<hr />
-<table bgcolor="white">
-<tr>
-<th width="200" align="right">Waypoint Location:</th><td width="200">3929.039<b>N</b> / -7245.996<b>W</b></td>
-</tr>
-<tr>
-<th width="200" align="right">Range to Waypoint:</th><td width="200">16.98 km</td>
-</tr>
-<tr>
-<th width="200" align="right">Bearing to Waypoint:</th><td width="200">127°</td>
-</tr>
-</table>
-</div>]]></text>
-				<textColor>ff000000</textColor>
-				<displayMode>default</displayMode>
-			</BalloonStyle>
-		</Style>
+		{{ text_box_macro.track_snippet(glider_tail,last_surfacing_info) }}
 		<Point>
 			<altitudeMode>absolute</altitudeMode>
 			<coordinates>-72.92400000000001,39.5764,4.999999999999999</coordinates>
@@ -111,86 +26,7 @@
 		<TimeStamp><when>2024-02-15T19:25:27Z</when>
 </TimeStamp>
 		<styleUrl>#{{ glider_name }}Deployment</styleUrl>
-		<Style>
-			<BalloonStyle>
-				<text><![CDATA[<div align="center">
-<img src="http://marine.rutgers.edu/~kerfoot/icons/glider_tails/{{ glider_name }}.png" height="80" width="64"></img>
-<table width="350" bgcolor="white">
-<tr>
-<th width="200" align="right">Connected:</th><td width="200">2024-02-15 19:25 GMT</td>
-</tr>
-<tr>
-<th width="200" align="right">Disconnected:</th><td width="200">2024-02-15 19:25 GMT</td>
-</tr>
-<tr>
-<th width="200" align="right"><a href="http://en.wikipedia.org/wiki/NMEA_0183">NMEA</a> GPS Position:</th><td width="200">4012.58<b>N</b> / -7351.10<b>W</b></td>
-</tr>
-<tr>
-<th width="200" align="right">GPS Acquired:</th><td bgcolor="green" width=200><font color="white">2024-02-15 19:24 GMT</font></td>
-</tr>
-<tr>
-<th width="200" align="right">Reason:</th><td width="200">Hit a waypoint</td></tr>
-<tr>
-<th width="200" align="right">Mission:</th><td width="200">100_nw.mi</td></tr>
-<tr>
-<th width="200" align="right">Filename:</th><td width="200">ru40-2024-046-3-1</td></tr>
-<tr>
-<th width="200" align="right">8.3 Filename:</th><td width="200">0133.0001</td></tr>
-<tr>
-<th width="200" align="right">DSVR Log:</th><td width="200">ru40_20240215T192540_network_net_0.log</td></tr>
-<tr>
-<th width="200" align="right">Segment E/W/O:</th>
-<td width="200">0/0/5</td>
-</tr>
-<tr>
-<th width="200" align="right">Mission E/W/O:</th>
-<td width="200">0/0/5</td>
-</tr>
-<tr>
-<th width="200" align="right">Total E/W/O:</th>
-<td width="200">0/1/80</td>
-</tr>
-<tr>
-<th width="200" align="right">Battery:</th>
-<td width="200" bgcolor="#008800"><font color="white">16.40 Volts</font></td>
-</tr>
-<tr>
-<th width="200" align="right">Internal Vacuum:</th>
-<td width="200" bgcolor="green"><font color="white">9.43 inHg</font></td>
-</tr>
-</table>
-<hr />
-<table width="350" bgcolor="white">
-<tr>
-<th width="200" align="right">Total Speed: </th>
-<td width="200">N/A @ N/A</td>
-</tr>
-<tr>
-<th width="200" align="right">Current Speed: </th>
-<td width="200">0.06 m/s @ 161°</td>
-</tr>
-<tr>
-<th width="200" align="right">Glide Speed: </th>
-<td width="200">N/A @ N/A</td>
-</tr>
-</table>
-<hr />
-<table bgcolor="white">
-<tr>
-<th width="200" align="right">Waypoint Location:</th><td width="200">4012.255<b>N</b> / -7345.917<b>W</b></td>
-</tr>
-<tr>
-<th width="200" align="right">Range to Waypoint:</th><td width="200">7.36 km</td>
-</tr>
-<tr>
-<th width="200" align="right">Bearing to Waypoint:</th><td width="200">94°</td>
-</tr>
-</table>
-</div>]]></text>
-				<textColor>ff000000</textColor>
-				<displayMode>default</displayMode>
-			</BalloonStyle>
-		</Style>
+		{{ text_box_macro.track_snippet(glider_tail,deployment_info) }}
 		<Point>
 			<altitudeMode>absolute</altitudeMode>
 			<coordinates>-73.8516,40.2097,4.999999999999999</coordinates>
@@ -212,6 +48,10 @@
 8.01 days deployed
 530 Iridium Minutes</Snippet>
 		{{ track_macro.track_snippet(glider_name,track_info) }}
+	</Folder>
+	<Folder id="surfaceEvents">
+		<name>Surface Events</name>
+		{{ surface_event_macro.surfacing(glider_name,surface_event_info) }}
 	</Folder>
 </Folder>
 </kml>
