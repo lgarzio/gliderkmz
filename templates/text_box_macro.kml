@@ -1,4 +1,4 @@
-{% macro text_box(glider_tail, data) -%}
+{% macro text_box_popup(glider_tail, data) -%}
 		<Style>
 			<BalloonStyle>
 				<text><![CDATA[<div align="center">

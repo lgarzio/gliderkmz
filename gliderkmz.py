@@ -31,9 +31,9 @@ def add_sensor_values(data_dict, sensor_name, sensor_api_data):
     data_dict[sensor_name] = sensor_value
 
 
-def build_deployment_lastsurf_dict(data):
+def build_popup_dict(data):
     """
-    Build the dictionaries for the data that populates the deployment and last surfacing locations in the kml
+    Build the dictionaries for the data that populates the pop-up text boxes
     :param data: dictionary
     """
     connect_ts = format_ts_epoch(data['connect_time_epoch'])
@@ -44,7 +44,7 @@ def build_deployment_lastsurf_dict(data):
     except TypeError:
         waypoint_range_km = None
 
-    return_dict = dict(
+    popup_dict = dict(
         connect_ts=connect_ts,
         disconnect_ts=disconnect_ts,
         nmea_lat=data['gps_lat'],
@@ -72,7 +72,14 @@ def build_deployment_lastsurf_dict(data):
         waypoint_bearing=data['waypoint_bearing_degrees']
     )
 
-    return return_dict
+    return popup_dict
+
+
+def convert_nmea_degrees(x):
+    """
+    Convert lat/lon coordinates from nmea to decimal degrees
+    """
+    return np.sign(x)*(np.floor(np.abs(x)/100)+np.mod(np.abs(x),100)/60)
 
 
 def format_ts_epoch(timestamp):
@@ -97,18 +104,36 @@ active_deployments = requests.get(f'{glider_api}deployments/?active').json()['da
 for ad in active_deployments:
     glider_name = ad['glider_name']
     if glider_name == glider:
-        filename = f'{glider_name}-test2.kml'
+        filename = f'{glider_name}-test3.kml'
         savefile = os.path.join(savedir, filename)
         deployment = ad['deployment_name']
         glider_tail = os.path.join(glider_tails, f'{glider_name}.png')
 
+        # get distance flow and calculate days deployed
+        distance_flown_km = ad['distance_flown_km']
+        try:
+            end = dt.datetime.fromtimestamp(ad['end_date_epoch'], dt.UTC)
+        except TypeError:
+            end = dt.datetime.now(dt.UTC)
+        start = dt.datetime.fromtimestamp(ad['start_date_epoch'], dt.UTC)
+        seconds_deployed = ((end - start).days * 86400) + (end - start).seconds
+        days_deployed = np.round(seconds_deployed / 86400, 2)
+
         # build the dictionary for the last surfacing information
-        last_surfacing_dict = build_deployment_lastsurf_dict(ad['last_surfacing'])
+        last_surfacing_popup_dict = build_popup_dict(ad['last_surfacing'])
+        ls_gps_lat_degrees = ad['last_surfacing']['gps_lat_degrees']
+        ls_gps_lon_degrees = ad['last_surfacing']['gps_lon_degrees']
 
         # add values for battery and vacuum to the last surfacing information
         for sensor in sensor_list:
             sensor_api = requests.get(f'{glider_api}sensors/?deployment={deployment}&sensor={sensor}').json()['data']
-            add_sensor_values(last_surfacing_dict, sensor, sensor_api)
+            add_sensor_values(last_surfacing_popup_dict, sensor, sensor_api)
+
+        # current waypoint information
+        cwpt_lat = ad['last_surfacing']['waypoint_lat']
+        cwpt_lon = ad['last_surfacing']['waypoint_lon']
+        cwpt_lat_degress = convert_nmea_degrees(cwpt_lat)
+        cwpt_lon_degress = convert_nmea_degrees(cwpt_lon)
 
         # track information
         # gather track timestamp and location from the API
@@ -150,30 +175,59 @@ for ad in active_deployments:
         # surface events
         surface_events = requests.get(f'{glider_api}surfacings/?deployment={deployment}').json()['data']
 
-        surface_df = pd.DataFrame(surface_events)
+        surface_events_dict = dict()
+        call_length_seconds = 0
 
-        # find the deployment location surface record  ***** this doesn't match up with the current kmzs *****
-        for se in surface_events:
+        # build the information for the surfacings
+        for idx, se in enumerate(surface_events):
+            call_length_seconds = call_length_seconds + se['call_length_seconds']
+            surface_event_popup = build_popup_dict(se)
+            surface_events_dict[idx] = dict(
+                connect_ts=surface_event_popup['connect_ts'],
+                connect_ts_Z=dt.datetime.fromtimestamp(se['connect_time_epoch'], dt.UTC).strftime('%Y-%m-%dT%H:%M:%SZ'),
+                gps_lat_degrees=se['gps_lat_degrees'],
+                gps_lon_degrees=se['gps_lon_degrees'],
+                surface_event_popup=surface_event_popup
+            )
+
+            # find the deployment location surface record  ***** this doesn't match up with the current kmzs *****
             if se['surfacing_id'] == deployment_sid:
 
                 # build the dictionary for the deployment information
-                deployment_dict = build_deployment_lastsurf_dict(se)
+                deployment_popup_dict = build_popup_dict(se)
+                deployment_ts_Z = dt.datetime.fromtimestamp(se['connect_time_epoch'], dt.UTC).strftime('%Y-%m-%dT%H:%M:%SZ')
+                deployment_gps_lat_degrees = se['gps_lat_degrees']
+                deployment_gps_lon_degrees = se['gps_lon_degrees']
 
                 # add values for battery and vacuum to deployment information
                 for sensor in sensor_list:
                     sensor_api = requests.get(f'{glider_api}sensors/?deployment={deployment}&sensor={sensor}').json()['data']
-                    add_sensor_values(deployment_dict, sensor, sensor_api)
+                    add_sensor_values(deployment_popup_dict, sensor, sensor_api)
 
         # render all of the information into the kml template
         content = template.render(
             ts_now=ts_now,
             glider_name=glider_name,
             glider_tail=glider_tail,
-            ls_connect_ts=last_surfacing_dict['connect_ts'],
-            last_surfacing_info=last_surfacing_dict,
-            deployment_info=deployment_dict,
+            ls_connect_ts=last_surfacing_popup_dict['connect_ts'],
+            deploy_ts_Z=deployment_ts_Z,
+            ls_gps_lat_degrees=ls_gps_lat_degrees,
+            ls_gps_lon_degrees=ls_gps_lon_degrees,
+            last_surfacing_popup=last_surfacing_popup_dict,
+            deploy_connect_ts=deployment_popup_dict['connect_ts'],
+            deploy_gps_lat_degrees=deployment_gps_lat_degrees,
+            deploy_gps_lon_degrees=deployment_gps_lon_degrees,
+            deployment_popup=deployment_popup_dict,
+            cwpt_since=last_surfacing_popup_dict['disconnect_ts'],
+            cwpt_lat=cwpt_lat,
+            cwpt_lon=cwpt_lon,
+            cwpt_lat_degrees=cwpt_lat_degress,
+            cwpt_lon_degrees=cwpt_lon_degress,
+            distance_flown_km=distance_flown_km,
+            days_deployed=days_deployed,
+            iridium_mins=int(np.round(call_length_seconds / 60)),
             track_info=track_dict,
-            surface_event_info=surface_events
+            surface_event_info=surface_events_dict
         )
 
         with open(savefile, mode="w", encoding="utf-8") as message:

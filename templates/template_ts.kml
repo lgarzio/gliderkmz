@@ -5,53 +5,58 @@
 <kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
 <Folder id="{{ glider_name }}-test">
 	<name>{{ glider_name }}</name>
+	<open>1</open>
 	<Snippet maxLines="2">Updated: {{ ts_now }} GMT</Snippet>
 	<styleUrl>#{{ glider_name }}</styleUrl>
 	<Placemark id="currentPosition">
 		<name>Last Surfacing</name>
 		<Snippet maxLines="2">{{ ls_connect_ts }} GMT</Snippet>
 		<TimeSpan>
-			<begin>2024-02-15T19:25:27Z</begin>
+			<begin>{{ deploy_ts_Z }}</begin>
 		</TimeSpan>
 		<styleUrl>#{{ glider_name }}Position</styleUrl>
-		{{ text_box_macro.text_box(glider_tail,last_surfacing_info) }}
+		{{ text_box_macro.text_box_popup(glider_tail, last_surfacing_popup) }}
+		<gx:balloonVisibility>1</gx:balloonVisibility>
 		<Point>
 			<altitudeMode>absolute</altitudeMode>
-			<coordinates>-72.92400000000001,39.5764,4.999999999999999</coordinates>
+			<coordinates>{{ ls_gps_lon_degrees }},{{ ls_gps_lat_degrees }},4.999999999999999</coordinates>
 		</Point>
 	</Placemark>
 	<Placemark id="deploymentLocation">
 		<name>Deployment Location</name>
-		<Snippet maxLines="2">2024-02-15 19:25</Snippet>
-		<TimeStamp><when>2024-02-15T19:25:27Z</when>
+		<visibility>0</visibility>
+		<Snippet maxLines="2">{{ deploy_connect_ts }}</Snippet>
+		<TimeStamp><when>{{ deploy_ts_Z }}</when>
 </TimeStamp>
 		<styleUrl>#{{ glider_name }}Deployment</styleUrl>
-		{{ text_box_macro.text_box(glider_tail,deployment_info) }}
+		{{ text_box_macro.text_box_popup(glider_tail, deployment_popup) }}
 		<Point>
 			<altitudeMode>absolute</altitudeMode>
-			<coordinates>-73.8516,40.2097,4.999999999999999</coordinates>
+			<coordinates>{{ deploy_gps_lon_degrees }},{{ deploy_gps_lat_degrees }},4.999999999999999</coordinates>
 		</Point>
 	</Placemark>
 	<Placemark>
 		<name>Current Waypoint: {{ glider_name }}</name>
-		<Snippet maxLines="2">Since: 2024-02-23 19:44</Snippet>
-		<description>3929.039 -7245.996</description>
+		<visibility>0</visibility>
+		<Snippet maxLines="2">Since: {{ cwpt_since }}</Snippet>
+		<description>{{ cwpt_lat }} {{ cwpt_lon }}</description>
 		<styleUrl>#r{{ glider_name }}Waypoint</styleUrl>
 		<Point>
 			<altitudeMode>absolute</altitudeMode>
-			<coordinates>-72.7666,39.484,4.999999999999999</coordinates>
+			<coordinates>{{ cwpt_lon_degrees }},{{ cwpt_lat_degrees }},4.999999999999999</coordinates>
 		</Point>
 	</Placemark>
 	<Folder id="track">
 		<name>Track</name>
-		<Snippet maxLines="3">132.25 km flown
-8.01 days deployed
-530 Iridium Minutes</Snippet>
+		<visibility>0</visibility>
+		<Snippet maxLines="3">{{ distance_flown_km }} km flown
+{{ days_deployed }} days deployed
+{{ iridium_mins }} Iridium minutes</Snippet>
 		{{ track_macro.track_snippet(glider_name,track_info) }}
 	</Folder>
 	<Folder id="surfaceEvents">
 		<name>Surface Events</name>
-		{{ surface_event_macro.surfacing(glider_name,surface_event_info) }}
+		{{ surface_event_macro.surfacing(glider_name, glider_tail, surface_event_info) }}
 	</Folder>
 </Folder>
 </kml>

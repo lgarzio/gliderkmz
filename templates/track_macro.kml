@@ -1,16 +1,17 @@
 {% macro track_snippet(glider_name, track_info) -%}
-{% for idx, ti in track_info.items() -%}
+{% for idx, data in track_info.items() -%}
 		<Placemark>
 			<name>Segment</name>
+			<visibility>0</visibility>
 			<TimeSpan>
-				<begin>{{ ti['start'] }}</begin>
-				<end>{{ ti['end'] }}</end>
+				<begin>{{ data['start'] }}</begin>
+				<end>{{ data['end'] }}</end>
 			</TimeSpan>
 			<styleUrl>#{{ glider_name }}Track</styleUrl>
 			<LineString>
 				<altitudeMode>absolute</altitudeMode>
 				<coordinates>
-					{{ ti['start_lon'] }},{{ ti['start_lat'] }},4.999999999999999 {{ ti['end_lon'] }},{{ ti['end_lat'] }},4.999999999999999 
+					{{ data['start_lon'] }},{{ data['start_lat'] }},4.999999999999999 {{ data['end_lon'] }},{{ data['end_lat'] }},4.999999999999999 
 				</coordinates>
 			</LineString>
 		</Placemark>
