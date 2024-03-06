@@ -1,85 +1,85 @@
-{% macro track_snippet(glider_tail, tb_info) -%}
+{% macro text_box(glider_tail, data) -%}
 		<Style>
 			<BalloonStyle>
 				<text><![CDATA[<div align="center">
 <img src="{{ glider_tail }}" height="80" width="64"></img>
 <table width="350" bgcolor="white">
 <tr>
-<th width="200" align="right">Connected:</th><td width="200">{{ tb_info['connect_ts'] }} GMT</td>
+<th width="200" align="right">Connected:</th><td width="200">{{ data['connect_ts'] }} GMT</td>
 </tr>
 <tr>
-<th width="200" align="right">Disconnected:</th><td width="200">2024-02-23 19:37 GMT</td>
+<th width="200" align="right">Disconnected:</th><td width="200">{{ data['disconnect_ts'] }} GMT</td>
 </tr>
 <tr>
-<th width="200" align="right"><a href="http://en.wikipedia.org/wiki/NMEA_0183">NMEA</a> GPS Position:</th><td width="200">3934.59<b>N</b> / -7255.44<b>W</b></td>
+<th width="200" align="right"><a href="http://en.wikipedia.org/wiki/NMEA_0183">NMEA</a> GPS Position:</th><td width="200">{{ data['nmea_lat'] }}<b>N</b> / {{ data['nmea_lon'] }}<b>W</b></td>
 </tr>
 <tr>
-<th width="200" align="right">GPS Acquired:</th><td bgcolor="green" width=200><font color="white">2024-02-23 19:35 GMT</font></td>
+<th width="200" align="right">GPS Acquired:</th><td bgcolor="green" width=200><font color="white">{{ data['gps_connect_ts'] }} GMT</font></td>
 </tr>
 <tr>
-<th width="200" align="right">Reason:</th><td width="200">no comms for a while</td></tr>
+<th width="200" align="right">Reason:</th><td width="200">{{ data['reason'] }}</td></tr>
 <tr>
-<th width="200" align="right">Mission:</th><td width="200">100_n.mi</td></tr>
+<th width="200" align="right">Mission:</th><td width="200">{{ data['mission'] }}</td></tr>
 <tr>
-<th width="200" align="right">Filename:</th><td width="200">ru40-2024-050-0-75</td></tr>
+<th width="200" align="right">Filename:</th><td width="200">{{ data['filename'] }}</td></tr>
 <tr>
-<th width="200" align="right">8.3 Filename:</th><td width="200">0134.0075</td></tr>
+<th width="200" align="right">8.3 Filename:</th><td width="200">{{ data['filename_8x3'] }}</td></tr>
 <tr>
-<th width="200" align="right">DSVR Log:</th><td width="200">ru40_20240223T193654_network_net_0.log</td></tr>
+<th width="200" align="right">DSVR Log:</th><td width="200">{{ data['dsvr_log'] }}</td></tr>
 <tr>
 <th width="200" align="right">Segment E/W/O:</th>
-<td width="200">0/0/3</td>
+<td width="200">{{ data['segment_ewo'] }}</td>
 </tr>
 <tr>
 <th width="200" align="right">Mission E/W/O:</th>
-<td width="200">0/2/101</td>
+<td width="200">{{ data['mission_ewo'] }}</td>
 </tr>
 <tr>
 <th width="200" align="right">Total E/W/O:</th>
-<td width="200">0/7/267</td>
+<td width="200">{{ data['total_ewo'] }}</td>
 </tr>
 <tr>
 <th width="200" align="right">Battery:</th>
-<td width="200" bgcolor="#008800"><font color="white">16.01 Volts</font></td>
+<td width="200" bgcolor="#008800"><font color="white">{{ data['m_battery'] }} Volts</font></td>
 </tr>
 <tr>
 <th width="200" align="right">Internal Vacuum:</th>
-<td width="200" bgcolor="green"><font color="white">9.31 inHg</font></td>
+<td width="200" bgcolor="green"><font color="white">{{ data['m_vacuum'] }} inHg</font></td>
 </tr>
 </table>
 <hr />
 <table width="350" bgcolor="white">
 <tr>
 <th width="200" align="right">Dive Time: </th>
-<td width="200">166.42 minutes</td>
+<td width="200">{{ data['dive_time'] }} minutes</td>
 </tr>
 <tr>
 <th width="200" align="right">Dive Distance: </th>
-<td width="200">1.83 km</td>
+<td width="200">{{ data['dive_dist'] }} km</td>
 </tr>
 <tr>
 <th width="200" align="right">Total Speed: </th>
-<td width="200">0.18 m/s @ 134°</td>
+<td width="200">{{ data['total_speed'] }} m/s @ {{ data['total_speed_bearing'] }}°</td>
 </tr>
 <tr>
 <th width="200" align="right">Current Speed: </th>
-<td width="200">0.12 m/s @ 265°</td>
+<td width="200">{{ data['current_speed'] }} m/s @ {{ data['current_speed_bearing'] }}°</td>
 </tr>
 <tr>
 <th width="200" align="right">Glide Speed: </th>
-<td width="200">0.28 m/s @ 114°</td>
+<td width="200">{{ data['glide_speed'] }} m/s @ {{ data['glide_speed_bearing'] }}°</td>
 </tr>
 </table>
 <hr />
 <table bgcolor="white">
 <tr>
-<th width="200" align="right">Waypoint Location:</th><td width="200">3929.039<b>N</b> / -7245.996<b>W</b></td>
+<th width="200" align="right">Waypoint Location:</th><td width="200">{{ data['waypoint_lat'] }}<b>N</b> / {{ data['waypoint_lon'] }}<b>W</b></td>
 </tr>
 <tr>
-<th width="200" align="right">Range to Waypoint:</th><td width="200">16.98 km</td>
+<th width="200" align="right">Range to Waypoint:</th><td width="200">{{ data['waypoint_range'] }} km</td>
 </tr>
 <tr>
-<th width="200" align="right">Bearing to Waypoint:</th><td width="200">127°</td>
+<th width="200" align="right">Bearing to Waypoint:</th><td width="200">{{ data['waypoint_bearing'] }}°</td>
 </tr>
 </table>
 </div>]]></text>

@@ -9,12 +9,12 @@
 	<styleUrl>#{{ glider_name }}</styleUrl>
 	<Placemark id="currentPosition">
 		<name>Last Surfacing</name>
-		<Snippet maxLines="2">2024-02-23 19:37 GMT</Snippet>
+		<Snippet maxLines="2">{{ ls_connect_ts }} GMT</Snippet>
 		<TimeSpan>
 			<begin>2024-02-15T19:25:27Z</begin>
 		</TimeSpan>
 		<styleUrl>#{{ glider_name }}Position</styleUrl>
-		{{ text_box_macro.track_snippet(glider_tail,last_surfacing_info) }}
+		{{ text_box_macro.text_box(glider_tail,last_surfacing_info) }}
 		<Point>
 			<altitudeMode>absolute</altitudeMode>
 			<coordinates>-72.92400000000001,39.5764,4.999999999999999</coordinates>
@@ -26,7 +26,7 @@
 		<TimeStamp><when>2024-02-15T19:25:27Z</when>
 </TimeStamp>
 		<styleUrl>#{{ glider_name }}Deployment</styleUrl>
-		{{ text_box_macro.track_snippet(glider_tail,deployment_info) }}
+		{{ text_box_macro.text_box(glider_tail,deployment_info) }}
 		<Point>
 			<altitudeMode>absolute</altitudeMode>
 			<coordinates>-73.8516,40.2097,4.999999999999999</coordinates>
