@@ -18,14 +18,17 @@ pd.set_option('display.width', 320, "display.max_columns", 10)
 # def format_ts_str(timestamp):
 #     return dt.datetime.strptime(timestamp, '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M')
 
-def add_sensor_values(data_dict, sensor_name, sensor_api_data):
+def add_sensor_values(data_dict, sensor_name, sdf):
     """
-    Add values from specific sensors to dictionary summaries
+    Find data from a sensor within a specific time range (+/- 5 minutes from surface disconnect time). Add the median
+    of the values to the dictionary summaries
     """
-    sensor_df = pd.DataFrame(sensor_api_data)
-    disconnect_ts_format = dt.datetime.strptime(data_dict['disconnect_ts'], '%Y-%m-%d %H:%M').strftime('%Y-%m-%dT%H:%M:00')
+    ts = pd.to_datetime(data_dict['disconnect_ts'])
+    t0 = ts - pd.Timedelta(minutes=5)
+    t1 = ts + pd.Timedelta(minutes=5)
+
     try:
-        sensor_value = sensor_df.loc[sensor_df.ts == disconnect_ts_format].value.values[0]
+        sensor_value = np.round(np.median(sdf.loc[np.logical_and(sdf.ts >= t0, sdf.ts <= t1)].value), 2)
     except IndexError:
         sensor_value = None
     data_dict[sensor_name] = sensor_value
@@ -119,6 +122,16 @@ for ad in active_deployments:
         seconds_deployed = ((end - start).days * 86400) + (end - start).seconds
         days_deployed = np.round(seconds_deployed / 86400, 2)
 
+        # grab the data from the surface sensors and store in a dictionary (so you only have to hit the API once
+        # per sensor per deployment)
+        sensor_data = dict()
+        for sensor in sensor_list:
+            sensor_api = requests.get(f'{glider_api}sensors/?deployment={deployment}&sensor={sensor}').json()['data']
+            sensor_df = pd.DataFrame(sensor_api)
+            sensor_df.sort_values(by='epoch_seconds', inplace=True, ignore_index=True)
+            sensor_df['ts'] = pd.to_datetime(sensor_df['ts'])
+            sensor_data[sensor] = sensor_df
+
         # build the dictionary for the last surfacing information
         last_surfacing_popup_dict = build_popup_dict(ad['last_surfacing'])
         ls_gps_lat_degrees = ad['last_surfacing']['gps_lat_degrees']
@@ -126,8 +139,7 @@ for ad in active_deployments:
 
         # add values for battery and vacuum to the last surfacing information
         for sensor in sensor_list:
-            sensor_api = requests.get(f'{glider_api}sensors/?deployment={deployment}&sensor={sensor}').json()['data']
-            add_sensor_values(last_surfacing_popup_dict, sensor, sensor_api)
+            add_sensor_values(last_surfacing_popup_dict, sensor, sensor_data[sensor])
 
         # current waypoint information
         cwpt_lat = ad['last_surfacing']['waypoint_lat']
@@ -190,6 +202,9 @@ for ad in active_deployments:
                 surface_event_popup=surface_event_popup
             )
 
+            for sensor in sensor_list:
+                add_sensor_values(surface_events_dict[idx]['surface_event_popup'], sensor, sensor_data[sensor])
+
             # find the deployment location surface record  ***** this doesn't match up with the current kmzs *****
             if se['surfacing_id'] == deployment_sid:
 
@@ -201,8 +216,7 @@ for ad in active_deployments:
 
                 # add values for battery and vacuum to deployment information
                 for sensor in sensor_list:
-                    sensor_api = requests.get(f'{glider_api}sensors/?deployment={deployment}&sensor={sensor}').json()['data']
-                    add_sensor_values(deployment_popup_dict, sensor, sensor_api)
+                    add_sensor_values(deployment_popup_dict, sensor, sensor_data[sensor])
 
         # render all of the information into the kml template
         content = template.render(
