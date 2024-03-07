@@ -93,8 +93,11 @@ savefile = os.path.join(savedir, 'active_deployments_ts-test3.kml')
 glider_tails = 'http://marine.rutgers.edu/~kerfoot/icons/glider_tails/'
 
 # colorblind-friendly colormap (https://mpetroff.net/2018/03/color-cycle-picker/) for tracks/points
-# the ff in the beginning is the alpha (ff=opaque)
-colors = ['ff7b85d4', 'fff37738', 'ff83c995', 'ffd7369e', 'ffc4c9d8', 'ffe9d043', 'ffad5b50']
+# NOTE: kml colors are encoded backwards from the HTML convention. HTML colors are "#rrggbbaa": Red Green Blue Alpha,
+# while KML colors are "AABBGGRR": Alpha Blue Green Red.
+
+# purple, orange, green, pink, gray, teal, yellow
+colors = ['ffd7369e', 'ff3877f3', 'ff83c995', 'ff9e36d7', 'ffc4c9d8', 'ffe9d043', 'ff43d0e9']
 
 ts_now = dt.datetime.now(dt.UTC).strftime('%m/%d/%y %H:%M')
 
