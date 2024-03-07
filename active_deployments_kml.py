@@ -94,7 +94,7 @@ glider_tails = 'http://marine.rutgers.edu/~kerfoot/icons/glider_tails/'
 
 # colorblind-friendly colormap (https://mpetroff.net/2018/03/color-cycle-picker/) for tracks/points
 # the ff in the beginning is the alpha (ff=opaque)
-colors = ['ff7b85d4', 'fff37738', 'ff83c995', 'ffd7369e', 'ffc4c9d8', 'ff859795', 'ffe9d043', 'ffad5b50']
+colors = ['ff7b85d4', 'fff37738', 'ff83c995', 'ffd7369e', 'ffc4c9d8', 'ffe9d043', 'ffad5b50']
 
 ts_now = dt.datetime.now(dt.UTC).strftime('%m/%d/%y %H:%M')
 
