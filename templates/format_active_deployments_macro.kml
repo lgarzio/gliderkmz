@@ -50,7 +50,7 @@
 				<key>normal</key>
 				<Style id="sn_shaded_dot">
 					<IconStyle>
-						<color>9900ffff</color>
+						<color>{{ data['deployment_color'] }}</color>
 						<scale>0.4</scale>
 						<Icon>
 							<href>http://maps.google.com/mapfiles/kml/shapes/shaded_dot.png</href>
@@ -75,7 +75,7 @@
 		</StyleMap>
 		<Style id="{{ data['name'] }}Track">
 			<LineStyle>
-				<color>ff00ffff</color>
+				<color>{{ data['deployment_color'] }}</color>
 				<width>4</width>
 			</LineStyle>
 		</Style>

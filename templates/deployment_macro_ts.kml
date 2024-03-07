@@ -5,7 +5,6 @@
 {% for deployment, data in dict.items() -%}
 <Folder id="{{ data['glider_name'] }}">
 	<name>{{ data['glider_name'] }}</name>
-	<open>1</open>
 	<Snippet maxLines="2">Updated: {{ data['ts_now'] }} GMT</Snippet>
 	<styleUrl>#{{ data['glider_name'] }}</styleUrl>
 	<Placemark id="currentPosition">
@@ -24,7 +23,6 @@
 	</Placemark>
 	<Placemark id="deploymentLocation">
 		<name>Deployment Location</name>
-		<visibility>0</visibility>
 		<Snippet maxLines="2">{{ data['deploy_connect_ts'] }}</Snippet>
 		<TimeStamp><when>{{ data['deploy_ts_Z'] }}</when>
 </TimeStamp>
@@ -37,7 +35,6 @@
 	</Placemark>
 	<Placemark>
 		<name>Current Waypoint: {{ data['glider_name'] }}</name>
-		<visibility>0</visibility>
 		<Snippet maxLines="2">Since: {{ data['cwpt_since'] }}</Snippet>
 		<description>{{ data['cwpt_lat'] }} {{ data['cwpt_lon'] }}</description>
 		<styleUrl>#{{ data['glider_name'] }}Waypoint</styleUrl>
@@ -48,7 +45,6 @@
 	</Placemark>
 	<Folder id="track">
 		<name>Track</name>
-		<visibility>0</visibility>
 		<Snippet maxLines="3">{{ data['distance_flown_km'] }} km flown
 {{ data['days_deployed'] }} days deployed
 {{ data['iridium_mins'] }} Iridium minutes</Snippet>
