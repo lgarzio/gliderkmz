@@ -1,0 +1,63 @@
+{% import 'track_macro.kml' as track_macro -%}
+{% import 'surface_event_macro.kml' as surface_event_macro -%}
+{% import 'text_box_macro.kml' as text_box_macro -%}
+{% macro build_deployments(dict) -%}
+{% for deployment, data in dict.items() -%}
+<Folder id="{{ data['glider_name'] }}">
+	<name>{{ data['glider_name'] }}</name>
+	<open>1</open>
+	<Snippet maxLines="2">Updated: {{ data['ts_now'] }} GMT</Snippet>
+	<styleUrl>#{{ data['glider_name'] }}</styleUrl>
+	<Placemark id="currentPosition">
+		<name>Last Surfacing</name>
+		<Snippet maxLines="2">{{ data['ls_connect_ts'] }} GMT</Snippet>
+		<TimeSpan>
+			<begin>{{ data['deploy_ts_Z'] }}</begin>
+		</TimeSpan>
+		<styleUrl>#{{ data['glider_name'] }}Position</styleUrl>
+		{{ text_box_macro.text_box_popup(data['glider_tail'], data['last_surfacing_popup']) }}
+		<gx:balloonVisibility>1</gx:balloonVisibility>
+		<Point>
+			<altitudeMode>absolute</altitudeMode>
+			<coordinates>{{ data['ls_gps_lon_degrees'] }},{{ data['ls_gps_lat_degrees'] }},4.999999999999999</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark id="deploymentLocation">
+		<name>Deployment Location</name>
+		<visibility>0</visibility>
+		<Snippet maxLines="2">{{ data['deploy_connect_ts'] }}</Snippet>
+		<TimeStamp><when>{{ data['deploy_ts_Z'] }}</when>
+</TimeStamp>
+		<styleUrl>#{{ data['glider_name'] }}Deployment</styleUrl>
+		{{ text_box_macro.text_box_popup(data['glider_tail'], data['deployment_popup']) }}
+		<Point>
+			<altitudeMode>absolute</altitudeMode>
+			<coordinates>{{ data['deploy_gps_lon_degrees'] }},{{ data['deploy_gps_lat_degrees'] }},4.999999999999999</coordinates>
+		</Point>
+	</Placemark>
+	<Placemark>
+		<name>Current Waypoint: {{ data['glider_name'] }}</name>
+		<visibility>0</visibility>
+		<Snippet maxLines="2">Since: {{ data['cwpt_since'] }}</Snippet>
+		<description>{{ data['cwpt_lat'] }} {{ data['cwpt_lon'] }}</description>
+		<styleUrl>#{{ data['glider_name'] }}Waypoint</styleUrl>
+		<Point>
+			<altitudeMode>absolute</altitudeMode>
+			<coordinates>{{ data['cwpt_lon_degrees'] }},{{ data['cwpt_lat_degrees'] }},4.999999999999999</coordinates>
+		</Point>
+	</Placemark>
+	<Folder id="track">
+		<name>Track</name>
+		<visibility>0</visibility>
+		<Snippet maxLines="3">{{ data['distance_flown_km'] }} km flown
+{{ data['days_deployed'] }} days deployed
+{{ data['iridium_mins'] }} Iridium minutes</Snippet>
+		{{ track_macro.track_snippet(data['glider_name'], data['track_info']) }}
+	</Folder>
+	<Folder id="surfaceEvents">
+		<name>Surface Events</name>
+		{{ surface_event_macro.surfacing(data['glider_name'], data['glider_tail'], data['surface_event_info']) }}
+	</Folder>
+</Folder>
+{% endfor -%}
+{%- endmacro -%}

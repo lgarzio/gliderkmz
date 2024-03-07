@@ -2,7 +2,7 @@
 
 """
 Author: lgarzio on 2/28/2024
-Last modified: lgarzio on 3/5/2024
+Last modified: lgarzio on 3/6/2024
 Test glider kmz generation
 """
 
@@ -61,14 +61,6 @@ def build_popup_dict(data):
         segment_ewo=f"{data['segment_errors']}/{data['segment_warnings']}/{data['segment_oddities']}",
         mission_ewo=f"{data['mission_errors']}/{data['mission_warnings']}/{data['mission_oddities']}",
         total_ewo=f"{data['total_errors']}/{data['total_warnings']}/{data['total_oddities']}",
-        dive_time=None,  # minutes  # ***** need to find all of these in the API *****
-        dive_dist=None,  # km
-        total_speed=None,  # m/s
-        total_speed_bearing=None,
-        current_speed=None,  # m/s
-        current_speed_bearing=None,
-        glide_speed=None,  # m/s
-        glide_speed_bearing=None,
         waypoint_lat=data['waypoint_lat'],
         waypoint_lon=data['waypoint_lon'],
         waypoint_range=waypoint_range_km,
@@ -82,33 +74,53 @@ def convert_nmea_degrees(x):
     """
     Convert lat/lon coordinates from nmea to decimal degrees
     """
-    return np.sign(x)*(np.floor(np.abs(x)/100)+np.mod(np.abs(x),100)/60)
+    try:
+        degrees = np.sign(x) * (np.floor(np.abs(x)/100) + np.mod(np.abs(x), 100) / 60)
+    except TypeError:
+        degrees = None
+
+    return degrees
 
 
 def format_ts_epoch(timestamp):
     return dt.datetime.fromtimestamp(timestamp, dt.UTC).strftime('%Y-%m-%d %H:%M')
 
 
-glider = 'ru40'
+gliders = ['maracoos_02', 'ru40']
 sensor_list = ['m_battery', 'm_vacuum']
 savedir = '/Users/garzio/Documents/repo/lgarzio/gliderkmz/templates/'
+savefile = os.path.join(savedir, 'active_deployments_ts-test.kml')
 glider_tails = 'http://marine.rutgers.edu/~kerfoot/icons/glider_tails/'
 ts_now = dt.datetime.now(dt.UTC).strftime('%m/%d/%y %H:%M')
 
-# load the template
+# load the templates
 environment = Environment(loader=FileSystemLoader(savedir))
-template = environment.get_template('deployment_template_ts.kml')
+template = environment.get_template('active_deployments_template.kml')
+format_template = environment.get_template('format_active_deployments_macro.kml')
+deployment_template = environment.get_template('deployment_macro_ts.kml')
 track_template = environment.get_template('track_macro.kml')
 surfacing_template = environment.get_template('surface_event_macro.kml')
 text_box_template = environment.get_template('text_box_macro.kml')
 
 glider_api = 'https://marine.rutgers.edu/cool/data/gliders/api/'
 active_deployments = requests.get(f'{glider_api}deployments/?active').json()['data']
+
+# build the formatting for the kml file
+format_dict = dict()
 for ad in active_deployments:
     glider_name = ad['glider_name']
-    if glider_name == glider:
-        filename = f'{glider_name}-test3.kml'
-        savefile = os.path.join(savedir, filename)
+    if glider_name in gliders:
+        deployment = ad['deployment_name']
+        format_dict[deployment] = dict(
+            name=glider_name,
+            glider_tail=os.path.join(glider_tails, f'{glider_name}.png')
+        )
+
+# build all of the information to populate each deployment
+deployment_dict = dict()
+for ad in active_deployments:
+    glider_name = ad['glider_name']
+    if glider_name in gliders:
         deployment = ad['deployment_name']
         glider_tail = os.path.join(glider_tails, f'{glider_name}.png')
 
@@ -133,17 +145,30 @@ for ad in active_deployments:
             sensor_data[sensor] = sensor_df
 
         # build the dictionary for the last surfacing information
-        last_surfacing_popup_dict = build_popup_dict(ad['last_surfacing'])
-        ls_gps_lat_degrees = ad['last_surfacing']['gps_lat_degrees']
-        ls_gps_lon_degrees = ad['last_surfacing']['gps_lon_degrees']
+        ls_api = ad['last_surfacing']
+        last_surfacing_popup_dict = build_popup_dict(ls_api)
+        ls_gps_lat_degrees = ls_api['gps_lat_degrees']
+        ls_gps_lon_degrees = ls_api['gps_lon_degrees']
 
         # add values for battery and vacuum to the last surfacing information
         for sensor in sensor_list:
             add_sensor_values(last_surfacing_popup_dict, sensor, sensor_data[sensor])
 
+        # add dive information (time, distance, speed)
+        last_surfacing_popup_dict['dive_time'] = int(np.round(ls_api['dive_time_seconds'] / 60)),  # minutes
+        last_surfacing_popup_dict['dive_dist'] = np.round(ls_api['segment_distance_m'] / 1000, 2),  # km
+        last_surfacing_popup_dict['total_speed'] = None  # m/s
+        last_surfacing_popup_dict['total_speed_bearing'] = None
+        last_surfacing_popup_dict['current_speed'] = None  # m/s
+        last_surfacing_popup_dict['current_speed_bearing'] = None
+        last_surfacing_popup_dict['glide_speed'] = None  # m/s
+        last_surfacing_popup_dict['glide_speed_bearing'] = None
+
         # current waypoint information
-        cwpt_lat = ad['last_surfacing']['waypoint_lat']
-        cwpt_lon = ad['last_surfacing']['waypoint_lon']
+        cwpt_lat = ls_api['waypoint_lat']
+        cwpt_lon = ls_api['waypoint_lon']
+        if not cwpt_lat:
+            print('test')
         cwpt_lat_degress = convert_nmea_degrees(cwpt_lat)
         cwpt_lon_degress = convert_nmea_degrees(cwpt_lon)
 
@@ -162,6 +187,14 @@ for ad in active_deployments:
                 track_dict['lon'] = np.append(track_dict['lon'], tf['geometry']['coordinates'][0])
                 track_dict['lat'] = np.append(track_dict['lat'], tf['geometry']['coordinates'][1])
                 track_dict['sid'] = np.append(track_dict['sid'], tf['properties']['sid'])
+
+        # add the last surfacing to the dictionary
+        track_dict['gps_epoch'] = np.append(track_dict['gps_epoch'], ls_api['connect_time_epoch'])
+        track_dict['lon'] = np.append(track_dict['lon'], ls_api['gps_lon_degrees'])
+        track_dict['lat'] = np.append(track_dict['lat'], ls_api['gps_lat_degrees'])
+        track_dict['sid'] = np.append(track_dict['sid'], ls_api['surfacing_id'])
+
+        # convert to dataframe to sort by time
         track_df = pd.DataFrame(track_dict)
         track_df.sort_values(by='gps_epoch', inplace=True, ignore_index=True)
 
@@ -172,7 +205,7 @@ for ad in active_deployments:
         track_dict = dict()
         for idx, row in track_df.iterrows():
             if idx > 0:
-                prev_row = track_df.iloc[idx-1]
+                prev_row = track_df.iloc[idx - 1]
                 start = dt.datetime.fromtimestamp(prev_row.gps_epoch, dt.UTC).strftime('%Y-%m-%dT%H:%M:%SZ')
                 end = dt.datetime.fromtimestamp(row.gps_epoch, dt.UTC).strftime('%Y-%m-%dT%H:%M:%SZ')
                 track_dict[idx] = dict(
@@ -186,6 +219,7 @@ for ad in active_deployments:
 
         # surface events
         surface_events = requests.get(f'{glider_api}surfacings/?deployment={deployment}').json()['data']
+        surf_df = pd.DataFrame(surface_events)
 
         surface_events_dict = dict()
         call_length_seconds = 0
@@ -205,12 +239,23 @@ for ad in active_deployments:
             for sensor in sensor_list:
                 add_sensor_values(surface_events_dict[idx]['surface_event_popup'], sensor, sensor_data[sensor])
 
+            # add dive information (time, distance, speed)
+            last_surfacing_popup_dict['dive_time'] = None,  # minutes
+            last_surfacing_popup_dict['dive_dist'] = None,  # km
+            last_surfacing_popup_dict['total_speed'] = None  # m/s
+            last_surfacing_popup_dict['total_speed_bearing'] = None
+            last_surfacing_popup_dict['current_speed'] = None  # m/s
+            last_surfacing_popup_dict['current_speed_bearing'] = None
+            last_surfacing_popup_dict['glide_speed'] = None  # m/s
+            last_surfacing_popup_dict['glide_speed_bearing'] = None
+
             # find the deployment location surface record  ***** this doesn't match up with the current kmzs *****
             if se['surfacing_id'] == deployment_sid:
 
                 # build the dictionary for the deployment information
                 deployment_popup_dict = build_popup_dict(se)
-                deployment_ts_Z = dt.datetime.fromtimestamp(se['connect_time_epoch'], dt.UTC).strftime('%Y-%m-%dT%H:%M:%SZ')
+                deployment_ts_Z = dt.datetime.fromtimestamp(se['connect_time_epoch'], dt.UTC).strftime(
+                    '%Y-%m-%dT%H:%M:%SZ')
                 deployment_gps_lat_degrees = se['gps_lat_degrees']
                 deployment_gps_lon_degrees = se['gps_lon_degrees']
 
@@ -218,8 +263,17 @@ for ad in active_deployments:
                 for sensor in sensor_list:
                     add_sensor_values(deployment_popup_dict, sensor, sensor_data[sensor])
 
-        # render all of the information into the kml template
-        content = template.render(
+                # add dive information (time, distance, speed)
+                last_surfacing_popup_dict['dive_time'] = 'N/A',  # minutes
+                last_surfacing_popup_dict['dive_dist'] = 'N/A',  # km
+                last_surfacing_popup_dict['total_speed'] = 'N/A'  # m/s
+                last_surfacing_popup_dict['total_speed_bearing'] = 'N/A'
+                last_surfacing_popup_dict['current_speed'] = None  # m/s
+                last_surfacing_popup_dict['current_speed_bearing'] = None
+                last_surfacing_popup_dict['glide_speed'] = 'N/A'  # m/s
+                last_surfacing_popup_dict['glide_speed_bearing'] = 'N/A'
+
+        deployment_dict[deployment] = dict(
             ts_now=ts_now,
             glider_name=glider_name,
             glider_tail=glider_tail,
@@ -244,10 +298,11 @@ for ad in active_deployments:
             surface_event_info=surface_events_dict
         )
 
-        with open(savefile, mode="w", encoding="utf-8") as message:
-            message.write(content)
-        print('done')
+# render all of the information into the kml template
+content = template.render(
+    format_info=format_dict,
+    deployment_info=deployment_dict
+)
 
-
-# template_source = environment.loader.get_source(environment, 'ru40.kml')
-# parsed_content = environment.parse(template_source)
+with open(savefile, mode="w", encoding="utf-8") as message:
+    message.write(content)

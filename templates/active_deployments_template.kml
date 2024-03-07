@@ -1,0 +1,11 @@
+{% import 'format_active_deployments_macro.kml' as format_macro -%}
+{% import 'deployment_macro_ts.kml' as deployment_macro_ts -%}
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document>
+	<name>Active Deployments</name>
+	<open>1</open>
+	{{ format_macro.format_deployment(format_info) }}
+	{{ deployment_macro_ts.build_deployments(deployment_info) }}
+</Document>
+</kml>
