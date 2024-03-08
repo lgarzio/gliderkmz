@@ -11,6 +11,7 @@ import datetime as dt
 import pandas as pd
 import numpy as np
 import requests
+import simplekml
 from jinja2 import Environment, FileSystemLoader
 pd.set_option('display.width', 320, "display.max_columns", 10)
 
@@ -89,7 +90,8 @@ def format_ts_epoch(timestamp):
 #gliders = ['maracoos_02', 'ru40']
 sensor_list = ['m_battery', 'm_vacuum']
 savedir = '/Users/garzio/Documents/repo/lgarzio/gliderkmz/templates/'
-savefile = os.path.join(savedir, 'active_deployments_ts-test3.kml')
+savefile = os.path.join(savedir, 'active_deployments-ts-test.kml')
+type = 'deployed_ts'  # 'deployed' 'deployed_ts'
 glider_tails = 'http://marine.rutgers.edu/~kerfoot/icons/glider_tails/'
 
 # colorblind-friendly colormap (https://mpetroff.net/2018/03/color-cycle-picker/) for tracks/points
@@ -122,6 +124,7 @@ if len(active_deployments) > len(colors):
 format_dict = dict()
 for idx, ad in enumerate(active_deployments):
     glider_name = ad['glider_name']
+    print(f'{glider_name}: color {colors[idx]}')
     #if glider_name in gliders:
     deployment = ad['deployment_name']
     format_dict[deployment] = dict(
@@ -215,21 +218,30 @@ for ad in active_deployments:
     # find the deployment id
     deployment_sid = int(track_df.iloc[0]['sid'])
 
-    # build the dictionary that contains the track information to input into the kml template
-    track_dict = dict()
-    for idx, row in track_df.iterrows():
-        if idx > 0:
-            prev_row = track_df.iloc[idx - 1]
-            start = dt.datetime.fromtimestamp(prev_row.gps_epoch, dt.UTC).strftime('%Y-%m-%dT%H:%M:%SZ')
-            end = dt.datetime.fromtimestamp(row.gps_epoch, dt.UTC).strftime('%Y-%m-%dT%H:%M:%SZ')
-            track_dict[idx] = dict(
-                start=start,
-                end=end,
-                start_lon=prev_row.lon,
-                start_lat=prev_row.lat,
-                end_lon=row.lon,
-                end_lat=row.lat
-            )
+    if type == 'deployed':
+        track_df = track_df.copy()[['lon', 'lat']]
+        track_df['height'] = 4.999999999999999
+        track_values = track_df.values.tolist()
+        kml = simplekml.Kml()
+        track_data = kml.newlinestring(name="track")
+        for values in track_values:
+            track_data.coords.addcoordinates([(values[0], values[1], values[2])])
+    elif type == 'deployed_ts':
+        # build the dictionary that contains the track information to input into the kml template
+        track_data = dict()
+        for idx, row in track_df.iterrows():
+            if idx > 0:
+                prev_row = track_df.iloc[idx - 1]
+                start = dt.datetime.fromtimestamp(prev_row.gps_epoch, dt.UTC).strftime('%Y-%m-%dT%H:%M:%SZ')
+                end = dt.datetime.fromtimestamp(row.gps_epoch, dt.UTC).strftime('%Y-%m-%dT%H:%M:%SZ')
+                track_data[idx] = dict(
+                    start=start,
+                    end=end,
+                    start_lon=prev_row.lon,
+                    start_lat=prev_row.lat,
+                    end_lon=row.lon,
+                    end_lat=row.lat
+                )
 
     # surface events
     surface_events = requests.get(f'{glider_api}surfacings/?deployment={deployment}').json()['data']
@@ -329,12 +341,13 @@ for ad in active_deployments:
         distance_flown_km=distance_flown_km,
         days_deployed=days_deployed,
         iridium_mins=int(np.round(call_length_seconds / 60)),
-        track_info=track_dict,
+        track_info=track_data,
         surface_event_info=surface_events_dict
     )
 
 # render all of the information into the kml template
 content = template.render(
+    kml_type=type,
     format_info=format_dict,
     deployment_info=deployment_dict
 )

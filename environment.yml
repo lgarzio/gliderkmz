@@ -7,4 +7,5 @@ dependencies:
   - requests
   - pandas
   - numpy
+  - simplekml
   - Jinja2

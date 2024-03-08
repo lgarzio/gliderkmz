@@ -1,8 +1,16 @@
-{% macro track_snippet(glider_name, track_info) -%}
-{% for idx, data in track_info.items() -%}
+{% macro track_snippet(glider_name, kml_type, track_info) -%}
+	{% if kml_type == 'deployed' -%}
+		<styleUrl>#{{ glider_name }}Track</styleUrl>
+		<LineString>
+			<altitudeMode>absolute</altitudeMode>
+			<coordinates>
+				{{ track_info.coords }}
+			</coordinates>
+		</LineString>
+	{% elif kml_type == 'deployed_ts' -%}
+	{% for idx, data in track_info.items() -%}
 		<Placemark>
 			<name>Segment</name>
-			<visibility>0</visibility>
 			<TimeSpan>
 				<begin>{{ data['start'] }}</begin>
 				<end>{{ data['end'] }}</end>
@@ -15,5 +23,6 @@
 				</coordinates>
 			</LineString>
 		</Placemark>
-{% endfor -%}
+		{% endfor -%}
+	{% endif -%}
 {%- endmacro -%}

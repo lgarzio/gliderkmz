@@ -6,6 +6,6 @@
 	<name>Active Deployments</name>
 	<open>1</open>
 	{{ format_macro.format_deployment(format_info) }}
-	{{ deployment_macro_ts.build_deployments(deployment_info) }}
+	{{ deployment_macro_ts.build_deployments(kml_type, deployment_info) }}
 </Document>
 </kml>

@@ -1,7 +1,7 @@
 {% import 'track_macro.kml' as track_macro -%}
 {% import 'surface_event_macro.kml' as surface_event_macro -%}
 {% import 'text_box_macro.kml' as text_box_macro -%}
-{% macro build_deployments(dict) -%}
+{% macro build_deployments(kml_type, dict) -%}
 {% for deployment, data in dict.items() -%}
 <Folder id="{{ data['glider_name'] }}">
 	<name>{{ data['glider_name'] }}</name>
@@ -10,12 +10,13 @@
 	<Placemark id="currentPosition">
 		<name>Last Surfacing</name>
 		<Snippet maxLines="2">{{ data['ls_connect_ts'] }} GMT</Snippet>
+		{% if kml_type == 'deployed_ts' -%}
 		<TimeSpan>
 			<begin>{{ data['deploy_ts_Z'] }}</begin>
 		</TimeSpan>
+		{% endif -%}
 		<styleUrl>#{{ data['glider_name'] }}Position</styleUrl>
 		{{ text_box_macro.text_box_popup(data['glider_tail'], data['last_surfacing_popup']) }}
-		<gx:balloonVisibility>1</gx:balloonVisibility>
 		<Point>
 			<altitudeMode>absolute</altitudeMode>
 			<coordinates>{{ data['ls_gps_lon_degrees'] }},{{ data['ls_gps_lat_degrees'] }},4.999999999999999</coordinates>
@@ -24,8 +25,10 @@
 	<Placemark id="deploymentLocation">
 		<name>Deployment Location</name>
 		<Snippet maxLines="2">{{ data['deploy_connect_ts'] }}</Snippet>
+		{% if kml_type == 'deployed_ts' -%}
 		<TimeStamp><when>{{ data['deploy_ts_Z'] }}</when>
-</TimeStamp>
+		</TimeStamp>
+		{% endif -%}
 		<styleUrl>#{{ data['glider_name'] }}Deployment</styleUrl>
 		{{ text_box_macro.text_box_popup(data['glider_tail'], data['deployment_popup']) }}
 		<Point>
@@ -43,16 +46,26 @@
 			<coordinates>{{ data['cwpt_lon_degrees'] }},{{ data['cwpt_lat_degrees'] }},4.999999999999999</coordinates>
 		</Point>
 	</Placemark>
+	{% if kml_type == 'deployed' -%}
+	<Placemark>
+		<name>Track</name>
+		<Snippet maxLines="3">{{ data['distance_flown_km'] }} km flown
+{{ data['days_deployed'] }} days deployed
+{{ data['iridium_mins'] }} Iridium minutes</Snippet>
+	{{ track_macro.track_snippet(data['glider_name'], kml_type, data['track_info']) }}
+	</Placemark>
+	{% elif kml_type == 'deployed_ts' -%}
 	<Folder id="track">
 		<name>Track</name>
 		<Snippet maxLines="3">{{ data['distance_flown_km'] }} km flown
 {{ data['days_deployed'] }} days deployed
 {{ data['iridium_mins'] }} Iridium minutes</Snippet>
-		{{ track_macro.track_snippet(data['glider_name'], data['track_info']) }}
+		{{ track_macro.track_snippet(data['glider_name'], kml_type, data['track_info']) }}
 	</Folder>
+	{% endif -%}
 	<Folder id="surfaceEvents">
 		<name>Surface Events</name>
-		{{ surface_event_macro.surfacing(data['glider_name'], data['glider_tail'], data['surface_event_info']) }}
+		{{ surface_event_macro.surfacing(data['glider_name'], data['glider_tail'], kml_type, data['surface_event_info']) }}
 	</Folder>
 </Folder>
 {% endfor -%}
