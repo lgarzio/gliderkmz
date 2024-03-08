@@ -2,7 +2,7 @@
 
 """
 Author: lgarzio on 2/28/2024
-Last modified: lgarzio on 3/7/2024
+Last modified: lgarzio on 3/8/2024
 Test glider kmz generation
 """
 
@@ -96,8 +96,9 @@ glider_tails = 'http://marine.rutgers.edu/~kerfoot/icons/glider_tails/'
 # NOTE: kml colors are encoded backwards from the HTML convention. HTML colors are "#rrggbbaa": Red Green Blue Alpha,
 # while KML colors are "AABBGGRR": Alpha Blue Green Red.
 
-# purple, orange, green, pink, gray, teal, yellow
-colors = ['ffd7369e', 'ff3877f3', 'ff83c995', 'ff9e36d7', 'ffc4c9d8', 'ffe9d043', 'ff43d0e9']
+# teal ('ffe9d043'), pink ('ff9e36d7'), purple ('ffd7369e'), yellow ('ff43d0e9'), orange ('ff3877f3'),
+# green ('ff83c995'), gray ('ffc4c9d8')
+colors = ['ffe9d043', 'ff9e36d7', 'ffd7369e', 'ff43d0e9', 'ff3877f3', 'ff83c995', 'ffc4c9d8']
 
 ts_now = dt.datetime.now(dt.UTC).strftime('%m/%d/%y %H:%M')
 
@@ -112,6 +113,10 @@ text_box_template = environment.get_template('text_box_macro.kml')
 
 glider_api = 'https://marine.rutgers.edu/cool/data/gliders/api/'
 active_deployments = requests.get(f'{glider_api}deployments/?active').json()['data']
+
+if len(active_deployments) > len(colors):
+    repeatx = int(np.ceil(len(active_deployments) / len(colors)))
+    colors = colors * repeatx
 
 # build the formatting for the kml file
 format_dict = dict()
