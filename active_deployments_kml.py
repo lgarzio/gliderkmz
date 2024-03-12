@@ -2,7 +2,7 @@
 
 """
 Author: lgarzio on 2/28/2024
-Last modified: lgarzio on 3/8/2024
+Last modified: lgarzio on 3/12/2024
 Test glider kmz generation
 """
 
@@ -92,9 +92,10 @@ sensor_list = ['m_battery', 'm_vacuum']
 savedir = '/Users/garzio/Documents/repo/lgarzio/gliderkmz/templates/'
 savefile = os.path.join(savedir, 'active_deployments-ts-test.kml')
 type = 'deployed_ts'  # 'deployed' 'deployed_ts'
-glider_tails = 'http://marine.rutgers.edu/~kerfoot/icons/glider_tails/'
+glider_tails = 'https://rucool.marine.rutgers.edu/gliders/glider_tails/'  # /www/web/rucool/gliders/glider_tails
+# old glider tails location: https://marine.rutgers.edu/~kerfoot/icons/glider_tails/
 
-# colorblind-friendly colormap (https://mpetroff.net/2018/03/color-cycle-picker/) for tracks/points
+# inspired by colorblind-friendly colormap (https://mpetroff.net/2018/03/color-cycle-picker/) for tracks/points
 # NOTE: kml colors are encoded backwards from the HTML convention. HTML colors are "#rrggbbaa": Red Green Blue Alpha,
 # while KML colors are "AABBGGRR": Alpha Blue Green Red.
 
@@ -184,8 +185,6 @@ for ad in active_deployments:
     # current waypoint information
     cwpt_lat = ls_api['waypoint_lat']
     cwpt_lon = ls_api['waypoint_lon']
-    if not cwpt_lat:
-        print('test')
     cwpt_lat_degress = convert_nmea_degrees(cwpt_lat)
     cwpt_lon_degress = convert_nmea_degrees(cwpt_lon)
 

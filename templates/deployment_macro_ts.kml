@@ -8,7 +8,7 @@
 	<Snippet maxLines="2">Updated: {{ data['ts_now'] }} GMT</Snippet>
 	<styleUrl>#{{ data['glider_name'] }}</styleUrl>
 	<Placemark id="currentPosition">
-		<name>Last Surfacing</name>
+		<name>Last Surfacing: {{ data['glider_name'] }}</name>
 		<Snippet maxLines="2">{{ data['ls_connect_ts'] }} GMT</Snippet>
 		{% if kml_type == 'deployed_ts' -%}
 		<TimeSpan>
@@ -36,6 +36,7 @@
 			<coordinates>{{ data['deploy_gps_lon_degrees'] }},{{ data['deploy_gps_lat_degrees'] }},4.999999999999999</coordinates>
 		</Point>
 	</Placemark>
+	{% if data['cwpt_lon_degrees'] -%}
 	<Placemark>
 		<name>Current Waypoint: {{ data['glider_name'] }}</name>
 		<Snippet maxLines="2">Since: {{ data['cwpt_since'] }}</Snippet>
@@ -46,6 +47,7 @@
 			<coordinates>{{ data['cwpt_lon_degrees'] }},{{ data['cwpt_lat_degrees'] }},4.999999999999999</coordinates>
 		</Point>
 	</Placemark>
+	{% endif -%}
 	{% if kml_type == 'deployed' -%}
 	<Placemark>
 		<name>Track</name>
