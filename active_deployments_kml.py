@@ -12,6 +12,7 @@ import pandas as pd
 import numpy as np
 import requests
 import simplekml
+import yaml
 from jinja2 import Environment, FileSystemLoader
 pd.set_option('display.width', 320, "display.max_columns", 10)
 
@@ -24,15 +25,28 @@ def add_sensor_values(data_dict, sensor_name, sdf):
     Find data from a sensor within a specific time range (+/- 5 minutes from surface disconnect time). Add the median
     of the values to the dictionary summaries
     """
+    yml_file = '/Users/garzio/Documents/repo/lgarzio/gliderkmz/configs/sensor_thresholds.yml'
+    with open(yml_file) as f:
+        sensor_thresholds = yaml.safe_load(f)
+    thresholds = sensor_thresholds[sensor_name]
+
     ts = pd.to_datetime(data_dict['disconnect_ts'])
     t0 = ts - pd.Timedelta(minutes=5)
     t1 = ts + pd.Timedelta(minutes=5)
 
     try:
         sensor_value = np.round(np.median(sdf.loc[np.logical_and(sdf.ts >= t0, sdf.ts <= t1)].value), 2)
+        if sensor_value <= thresholds['fail_threshold']:
+            bgcolor = 'darkred'
+        elif thresholds['suspect_span'][0] < sensor_value < thresholds['suspect_span'][1]:
+            bgcolor = 'BEA60E'  # yellow BEA60E
+        else:
+            bgcolor = 'green'
     except IndexError:
         sensor_value = None
+        bgcolor = 'BEA60E'  # yellow BEA60E
     data_dict[sensor_name] = sensor_value
+    data_dict[f'{sensor_name}_bgcolor'] = bgcolor
 
 
 def build_popup_dict(data):
@@ -43,6 +57,15 @@ def build_popup_dict(data):
     connect_ts = format_ts_epoch(data['connect_time_epoch'])
     disconnect_ts = format_ts_epoch(data['disconnect_time_epoch'])
     gps_connect_ts = format_ts_epoch(data['gps_timestamp_epoch'])
+
+    gps_connect_timedelta = dt.datetime.fromtimestamp(data['connect_time_epoch'], dt.UTC) - dt.datetime.fromtimestamp(data['gps_timestamp_epoch'], dt.UTC)
+    if gps_connect_timedelta.seconds >= 3600:  # 3600 = 1 hour
+        gps_bgcolor = 'darkred'
+    elif 3600 > gps_connect_timedelta.seconds > 600:  # between 10 mins (600) and 1 hour (3600)
+        gps_bgcolor = 'BEA60E'  # yellow BEA60E
+    else:  # < 10 minutes
+        gps_bgcolor = 'green'
+
     try:
         waypoint_range_km = data['waypoint_range_meters'] / 1000
     except TypeError:
@@ -51,9 +74,10 @@ def build_popup_dict(data):
     popup_dict = dict(
         connect_ts=connect_ts,
         disconnect_ts=disconnect_ts,
-        nmea_lat=data['gps_lat'],
-        nmea_lon=data['gps_lon'],
+        gps_lat=np.round(convert_nmea_degrees(data['gps_lat']), 2),
+        gps_lon=np.round(convert_nmea_degrees(data['gps_lon']), 2),
         gps_connect_ts=gps_connect_ts,
+        gps_bgcolor=gps_bgcolor,
         reason=data['surface_reason'],
         mission=data['mission'],
         filename=data['filename'],

@@ -11,10 +11,10 @@
 <th width="200" align="right">Disconnected:</th><td width="200">{{ data['disconnect_ts'] }} GMT</td>
 </tr>
 <tr>
-<th width="200" align="right"><a href="http://en.wikipedia.org/wiki/NMEA_0183">NMEA</a> GPS Position:</th><td width="200">{{ data['nmea_lat'] }}<b>N</b> / {{ data['nmea_lon'] }}<b>W</b></td>
+<th width="200" align="right">GPS Position:</th><td width="200">{{ data['gps_lat'] }}<b>°N</b> / {{ data['gps_lon'] }}<b>°W</b></td>
 </tr>
 <tr>
-<th width="200" align="right">GPS Acquired:</th><td bgcolor="green" width=200><font color="white">{{ data['gps_connect_ts'] }} GMT</font></td>
+<th width="200" align="right">GPS Acquired:</th><td bgcolor={{ data['gps_bgcolor'] }} width=200><font color="white">{{ data['gps_connect_ts'] }} GMT</font></td>
 </tr>
 <tr>
 <th width="200" align="right">Reason:</th><td width="200">{{ data['reason'] }}</td></tr>
@@ -40,11 +40,11 @@
 </tr>
 <tr>
 <th width="200" align="right">Battery:</th>
-<td width="200" bgcolor="#008800"><font color="white">{{ data['m_battery'] }} Volts</font></td>
+<td width="200" bgcolor={{ data['m_battery_bgcolor'] }}><font color="white">{{ data['m_battery'] }} Volts</font></td>
 </tr>
 <tr>
 <th width="200" align="right">Internal Vacuum:</th>
-<td width="200" bgcolor="green"><font color="white">{{ data['m_vacuum'] }} inHg</font></td>
+<td width="200" bgcolor={{ data['m_vacuum_bgcolor'] }}><font color="white">{{ data['m_vacuum'] }} inHg</font></td>
 </tr>
 </table>
 <hr />
