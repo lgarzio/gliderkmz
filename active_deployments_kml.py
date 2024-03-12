@@ -113,6 +113,7 @@ def format_ts_epoch(timestamp):
 
 #gliders = ['maracoos_02', 'ru40']
 sensor_list = ['m_battery', 'm_vacuum']
+templatedir = '/Users/garzio/Documents/repo/lgarzio/gliderkmz/templates/'
 savedir = '/Users/garzio/Documents/repo/lgarzio/gliderkmz/templates/'
 savefile = os.path.join(savedir, 'active_deployments-ts-test.kml')
 type = 'deployed_ts'  # 'deployed' 'deployed_ts'
@@ -130,10 +131,10 @@ colors = ['ffe9d043', 'ff9e36d7', 'ffd7369e', 'ff43d0e9', 'ff3877f3', 'ff83c995'
 ts_now = dt.datetime.now(dt.UTC).strftime('%m/%d/%y %H:%M')
 
 # load the templates
-environment = Environment(loader=FileSystemLoader(savedir))
+environment = Environment(loader=FileSystemLoader(templatedir))
 template = environment.get_template('active_deployments_template.kml')
 format_template = environment.get_template('format_active_deployments_macro.kml')
-deployment_template = environment.get_template('deployment_macro_ts.kml')
+deployment_template = environment.get_template('deployment_macro.kml')
 track_template = environment.get_template('track_macro.kml')
 surfacing_template = environment.get_template('surface_event_macro.kml')
 text_box_template = environment.get_template('text_box_macro.kml')
