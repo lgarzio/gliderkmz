@@ -116,7 +116,7 @@ sensor_list = ['m_battery', 'm_vacuum']
 templatedir = '/Users/garzio/Documents/repo/lgarzio/gliderkmz/templates/'
 savedir = '/Users/garzio/Documents/repo/lgarzio/gliderkmz/templates/'
 savefile = os.path.join(savedir, 'active_deployments-ts-test.kml')
-type = 'deployed_ts'  # 'deployed' 'deployed_ts'
+kml_type = 'deployed_ts_uv'  # 'deployed' 'deployed_ts' 'deployed_uv' 'deployed_ts_uv'
 glider_tails = 'https://rucool.marine.rutgers.edu/gliders/glider_tails/'  # /www/web/rucool/gliders/glider_tails
 # old glider tails location: https://marine.rutgers.edu/~kerfoot/icons/glider_tails/
 
@@ -242,7 +242,7 @@ for ad in active_deployments:
     # find the deployment id
     deployment_sid = int(track_df.iloc[0]['sid'])
 
-    if type == 'deployed':
+    if kml_type in ['deployed', 'deployed_uv']:
         track_df = track_df.copy()[['lon', 'lat']]
         track_df['height'] = 4.999999999999999
         track_values = track_df.values.tolist()
@@ -250,7 +250,7 @@ for ad in active_deployments:
         track_data = kml.newlinestring(name="track")
         for values in track_values:
             track_data.coords.addcoordinates([(values[0], values[1], values[2])])
-    elif type == 'deployed_ts':
+    elif kml_type in ['deployed_ts', 'deployed_ts_uv']:
         # build the dictionary that contains the track information to input into the kml template
         track_data = dict()
         for idx, row in track_df.iterrows():
@@ -275,15 +275,17 @@ for ad in active_deployments:
     t24h = pd.to_datetime(ts_now) - pd.Timedelta(hours=24)
 
     surface_events_dict = dict()
+    currents_dict = dict()
     call_length_seconds = 0
 
-    # build the information for the surfacings
+    # build the information for the surfacings and depth-averaged currents
     for idx, se in enumerate(surface_events):
         call_length_seconds = call_length_seconds + se['call_length_seconds']
         surface_event_popup = build_popup_dict(se)
 
         # define surfacing grouping (e.g. last 24 hours or day)
         se_ts = pd.to_datetime(surface_event_popup['connect_ts'])
+
         if se_ts >= t24h:
             folder_name = 'Last 24 Hours'
             style_name = 'RecentSurfacing'
@@ -291,15 +293,38 @@ for ad in active_deployments:
             folder_name = se_ts.strftime('%Y-%m-%d')
             style_name = 'Surfacing'
 
-        # add the folder name to the dictionary if it's not already there
+        # define folder name for depth-average currents
+        currents_folder_name = se_ts.strftime('%Y-%m-%d')
+        connect_datetime = dt.datetime.fromtimestamp(se['connect_time_epoch'], dt.UTC)
+
+        # add the folder name to the surface events dictionary if it's not already there
         try:
             surface_events_dict[folder_name]
         except KeyError:
             surface_events_dict[folder_name] = dict()
 
+        # add the folder name to the currents dictionary if it's not already there
+        try:
+            currents_dict[currents_folder_name]
+        except KeyError:
+            currents_dict[currents_folder_name] = dict()
+
+        # calculate depth-average currents  **************TO DO**************
+        lon_deg_end = se['gps_lon_degrees'] - .05
+        lat_deg_end = se['gps_lat_degrees'] - .05
+
+        currents_dict[currents_folder_name][idx] = dict(
+            connect_HHMM=connect_datetime.strftime('%H:%M'),
+            connect_ts_Z=connect_datetime.strftime('%Y-%m-%dT%H:%M:%SZ'),
+            lon_degrees_start=se['gps_lon_degrees'],
+            lat_degrees_start=se['gps_lat_degrees'],
+            lon_degrees_end=lon_deg_end,
+            lat_degrees_end=lat_deg_end,
+        )
+
         surface_events_dict[folder_name][idx] = dict(
             connect_ts=surface_event_popup['connect_ts'],
-            connect_ts_Z=dt.datetime.fromtimestamp(se['connect_time_epoch'], dt.UTC).strftime('%Y-%m-%dT%H:%M:%SZ'),
+            connect_ts_Z=connect_datetime.strftime('%Y-%m-%dT%H:%M:%SZ'),
             gps_lat_degrees=se['gps_lat_degrees'],
             gps_lon_degrees=se['gps_lon_degrees'],
             style_name=style_name,
@@ -366,12 +391,13 @@ for ad in active_deployments:
         days_deployed=days_deployed,
         iridium_mins=int(np.round(call_length_seconds / 60)),
         track_info=track_data,
-        surface_event_info=surface_events_dict
+        surface_event_info=surface_events_dict,
+        currents_info=currents_dict
     )
 
 # render all of the information into the kml template
 content = template.render(
-    kml_type=type,
+    kml_type=kml_type,
     format_info=format_dict,
     deployment_info=deployment_dict
 )
